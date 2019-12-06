@@ -1,0 +1,143 @@
+---
+title: "Arabian Depression"
+author: "Muhammad Ezzat - AUG"
+date: "10/26/2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("broom")
+library("dplyr")
+library("forcats")
+library("ggplot2")
+library("markdown")
+library("plyr")
+library("purrr")
+library("RColorBrewer")
+library("readr")
+library("readxl")
+library("rmarkdown")
+library("stringr")
+library("tibble")
+library("tidyr")
+library("tidyverse")
+```
+
+## Inroduction 
+  Mental Health is an integral attribute of any healthy human-being , it’s deterioration certainly leads to many terrible consequences like feeling down or inactivity , losing or gaining weight it may lead to serious physical diseases , or even bigger **suicide** ..
+```{r , include=FALSE}
+arabs <- c("Algeria","Bahrain","Djibouti","Egypt","Iraq","Jordan","Kuwait","Lebnanon","Libya","Muritania","Morocco","Oman","Palestine",
+           "Qatar","Saudi Arabia","Somalia","Sudan","Syria","Tunisia","United Arab Emirates","Yemen")
+years <- c(2002:2005)
+years <- as.character(years)
+suicide_rates <- read_csv("suicide-rates.csv")
+suicide_rates <- suicide_rates %>% select(Entity,Year,`suicide rate (age-adjusted suicides per 100,000 people)`)
+suicide_rates <- suicide_rates %>% filter(Entity %in% arabs)
+suicide_rates <- suicide_rates %>% filter(Year %in% years)
+suicide_rates$Entity <- as.factor(suicide_rates$Entity)
+```
+
+## Situation :
+  Studying data of suicide rate from years 2002 till 2010 for *Arabic countries* brought to you form [Our World in data](ourworldindata.org) we can observe the following dotplot ..
+```{r ,include=FALSE}
+Dotplot <-  ggplot(suicide_rates,aes(`suicide rate (age-adjusted suicides per 100,000 people)`,Entity))+geom_path()+
+      geom_text(aes(x=`suicide rate (age-adjusted suicides per 100,000 people)`, y=Entity ,
+                    label=round(`suicide rate (age-adjusted suicides per 100,000 people)`,1),size=1,hjust = ifelse(Year == "2002" , -2.5,2.5)),color="grey25")+
+                            theme(axis.ticks = element_blank(),axis.title = element_blank(),  plot.subtitle = element_text(size = 9),
+                                  legend.position = "none", panel.grid.major.x = element_blank()) +
+                                      labs(x= "Suicide rates / 100K people", y = "Country", title = "Suicide rates in Arabian Nations",
+                                           subtitle = "From 2002 to 2010", caption = "Data source : ourworldindata.org")
+```
+```{r,fig.width=12,fig.height=9}
+Dotplot
+```
+  Here the two written labels represnt the initial suicide deaths rate & the final one respectively , while that horizontal line shows the displacement between those two vlues whether it's positive or negative . It's clear that few countries are going lower on these numbers but the majority isn't . That is the study objective , factorial analysis of depression & suicidal issue the Arab nation is facing . 
+
+## Facotr Analysis 
+
+## A) Inequality : 
+  On Feburary 2018 The World Psychiatry journal published a [paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5775138/) that 	demonstrates the correlation between income inequality & depression . Results weren't so surprising as we all experinced the feeling of injustice & how it affects our morality . For income inequality Gini index is a suitable notation . The Gini index is a simple measure of the distribution of income across income percentiles in a population. A higher Gini index indicates greater inequality, with high income individuals receiving much larger percentages of the total income of the population. 
+```{r ,include=FALSE}
+gini <- read_csv("gini.csv")
+gini <- gini %>% gather(years,index,-country)
+gini <- gini %>% filter(country %in% arabs)
+box_plt<-ggplot(gini,aes(y=index,x=country))+geom_boxplot()+geom_hline(yintercept = 40,color="red")+
+  theme(axis.ticks = element_blank(),axis.title = element_blank(),  plot.subtitle = element_text(size = 9),
+        legend.position = "none", panel.grid.major.x = element_blank())
+```
+```{r,fig.width=18,fig.height=9,fig.align="center"}
+box_plt
+```
+  Using boxplots to compare distributions of Gini index across the years for each country was a good idea of visualization , we can observe that alot of countries exceeded the threshold of 40 on many occasions . That is a handy piece of information . 
+  
+## B) Isolation :
+  Loneliness can be damaging to both our mental and physical health. Socially isolated people are less able to deal with stressful situations. They're also more likely to feel depressed and may have problems processing information. This in turn can lead to difficulties with decision-making and memory storage and recall.
+  World wide web wasn't just an invention , it was a revolution . However it may deffect our social lives by mor than a mean . The increase of our internet using population is all good , but somehow it isolates us from face to face connections creating a state of loneliness . 
+```{r , include = FALSE}
+arabs <- c("Algeria","Bahrain","Djibouti","Egypt","Iraq","Jordan","Kuwait","Lebnanon","Libya","Muritania","Morocco","Oman","Palestine",
+           "Qatar","Saudi Arabia","Somalia","Sudan","Syria","Tunisia","United Arab Emirates","Yemen")
+internet <- read_csv("internet.csv")
+internet <- internet %>% gather(years , pop , -country)
+year <- 1990:2008
+internet <- internet %>% filter(years %in% year)
+internet <- na.omit(internet)
+internet <- internet %>% filter(country %in% arabs)
+internet$years <- as.numeric(internet$years)
+int_plt <-ggplot(internet , aes(years,pop))+geom_col()+facet_wrap(.~country)+
+  labs(x="Years",y="Internet using population (%)")
+```
+```{r , fig.width= 12,fig.height=9}
+int_plt
+```
+  The population is in obvious increase , although it's natural due to modernization & I have to say the correlation between our case & depression is generally not big enough , but it should be considered .
+
+## C) Work Stress : 
+  Careers are good for both physical & mental health & it provides a stable income source . However it's rapid icrease may affect a human negatively . The bar chart below compares the mean working hours in the past 15 years compared to an average american citzien of **34.7 hours a week ** 
+```{r , include = FALSE}
+arabs <- c("Algeria","Bahrain","Djibouti","Egypt","Iraq","Jordan","Kuwait","Lebnanon","Libya","Muritania","Morocco","Oman","Palestine",
+           "Qatar","Saudi Arabia","Somalia","Sudan","Syria","Tunisia","United Arab Emirates","Yemen")
+work <- read_csv("work.csv")
+work <-work %>%  gather(years , stress ,-country)
+work <- na.omit(work)
+work <- filter(work,country %in% arabs)
+workStress<- work %>% group_by(country) %>% dplyr::summarise(workinghours = mean(stress)) %>%
+ggplot(aes(country,workinghours))+geom_col()+
+  labs(x="Country",y="Mean Working hours ( past 15 years )") +
+  theme(panel.grid.major.x =element_blank())+geom_hline(yintercept = 34.7,color="red")
+```
+```{r , fig.width= 12,fig.height=9}
+workStress
+```
+  Most of the arabian countries exceed that threshold , with a significant increase appears in *Qatar , Saudi Arabia & Emirates* which actually makes sense as those three countries are the three most profitable investing countries where people come from across the nation to work for their headquarters .. 
+
+## Conclusion :
+  This beautiful bubble chart represents the relation between **Life expectancy** ( age at which a citizen is expected to die ) , **GDP** ( economical gross ) & **HDI** (Human Development Index “governmental money spent over health , education & entertainment”).
+```{r,include=FALSE}
+LE <- read_csv("life_expectancy.csv")
+LE <- LE %>% gather(time , life_exp,-country)
+LE <- filter(LE,country %in% arabs)
+LE$time <- as.numeric(LE$time)
+HDI <- read_csv("hdi.csv")
+HDI <- HDI %>% gather(time , hdi , -country)
+HDI <- filter(HDI,country %in% arabs)
+HDI <- na.omit(HDI)
+HDI$time <- as.numeric(HDI$time)
+bubbly <- LE %>% inner_join(HDI,by=c("country","time"))
+gdp <- read_csv("gdp.csv")
+gdp <- gdp %>% gather(time , gdp , -country)
+gdp <- filter(gdp , country %in% arabs)
+gdp$gdp <- log(gdp$gdp)
+gdp$time <- as.numeric(gdp$time)
+bubbly <- bubbly %>% inner_join(gdp,by=c("country","time"))
+bubbleChart <- bubbly %>% group_by(country) %>% dplyr::summarise(mean_gdp=mean(gdp),mean_hdi=mean(hdi),mean_life_exp=mean(life_exp)) %>%
+ggplot(aes(mean_gdp, mean_life_exp,size=mean_hdi))+geom_point(alpha=0.7,aes(col=country))+scale_size(range = c(.1, 30)) +
+      geom_label(aes(label=country,col="red",size=0.43)) + theme(legend.position = "none") +
+                  labs(x="Mean GDP/cap [logScale]",y="Mean Life Expectancy",title="BubbleChart",subtitle = "Circle sizes are mapped to HDI")
+```
+```{r , fig.width= 12,fig.height=9,warning=FALSE}
+bubbleChart
+````
+  Finally , Depression is a real illness and help is available. With proper diagnosis and treatment, the vast majority of people with depression will overcome it. If you are experiencing symptoms of depression, a first step is to see your family physician or psychiatrist. Talk about your concerns and request a thorough evaluation. This is a start to addressing mental health needs.
+
+
